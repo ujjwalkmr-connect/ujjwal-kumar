@@ -29,7 +29,9 @@ function AnimatedCounterComponent({ value, suffix = '', prefix = '', decimals = 
         ref.current.textContent = `${prefix}${state.value.toFixed(decimals)}${suffix}`
       }
     })
-    return () => tween.kill()
+    return () => {
+      tween.kill()
+    }
   }, [decimals, prefix, suffix, value])
 
   return <span ref={ref} className={className}>{prefix}0{suffix}</span>

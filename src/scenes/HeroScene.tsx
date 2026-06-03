@@ -19,7 +19,9 @@ function CameraScrollRig() {
       z: 8,
       scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
     })
-    return () => tween.kill()
+    return () => {
+      tween.kill()
+    }
   }, [camera])
 
   return null
@@ -36,7 +38,9 @@ function SceneContent() {
       z: 0.6,
       scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
     })
-    return () => tween.kill()
+    return () => {
+      tween.kill()
+    }
   }, [])
 
   return (

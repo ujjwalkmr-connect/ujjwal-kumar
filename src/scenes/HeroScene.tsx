@@ -1,84 +1,113 @@
-import { memo, useEffect, useRef } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
-import { AdaptiveDpr, AdaptiveEvents, ContactShadows, Environment, Html, PerformanceMonitor } from '@react-three/drei'
-import { Bloom, EffectComposer, Vignette, Noise, DepthOfField } from '@react-three/postprocessing'
-import { BlendFunction } from 'postprocessing'
+cat > src/scenes/HeroScene.tsx <<'EOF'
+import { Environment, Float, Sparkles } from '@react-three/drei'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing'
+import { memo, useRef } from 'react'
 import * as THREE from 'three'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { ParticleField } from './ParticleField'
-import { FloatingGeometry } from './FloatingGeometry'
+import { useStore } from '../store/useStore'
 
-gsap.registerPlugin(ScrollTrigger)
+function OrbitingGrowthSystem() {
+  const group = useRef<THREE.Group>(null)
+  const innerRing = useRef<THREE.Mesh>(null)
+  const outerRing = useRef<THREE.Mesh>(null)
+  const core = useRef<THREE.Mesh>(null)
 
-function CameraScrollRig() {
-  const { camera } = useThree()
+  const mouseX = useStore(state => state.mouseX)
+  const mouseY = useStore(state => state.mouseY)
 
-  useEffect(() => {
-    const tween = gsap.to(camera.position, {
-      z: 8,
-      scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
-    })
-    return () => {
-      tween.kill()
+  useFrame((state, delta) => {
+    if (!group.current) return
+
+    const x = (mouseY / window.innerHeight - 0.5) * 0.55
+    const y = (mouseX / window.innerWidth - 0.5) * 0.75
+
+    group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, x, delta * 2.2)
+    group.current.rotation.y = THREE.MathUtils.lerp(group.current.rotation.y, y, delta * 2.2)
+    group.current.position.y = Math.sin(state.clock.elapsedTime * 0.8) * 0.08
+
+    if (innerRing.current) innerRing.current.rotation.z += delta * 0.45
+    if (outerRing.current) outerRing.current.rotation.z -= delta * 0.22
+
+    if (core.current) {
+      core.current.rotation.x += delta * 0.18
+      core.current.rotation.y += delta * 0.28
     }
-  }, [camera])
-
-  return null
-}
-
-function SceneContent() {
-  const groupRef = useRef<THREE.Group>(null)
-
-  useEffect(() => {
-    if (!groupRef.current) return
-    const tween = gsap.to(groupRef.current.scale, {
-      x: 0.6,
-      y: 0.6,
-      z: 0.6,
-      scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
-    })
-    return () => {
-      tween.kill()
-    }
-  }, [])
+  })
 
   return (
-    <group ref={groupRef}>
-      <ParticleField />
-      <FloatingGeometry kind="torus" position={[0.05, 0.15, 0]} multiplier={0.22} />
-      <FloatingGeometry kind="ico" position={[-1.55, -0.7, -0.4]} multiplier={0.12} />
-      <FloatingGeometry kind="octa" position={[1.55, -0.85, -0.2]} multiplier={0.16} />
-      <ContactShadows position={[0, -1.85, 0]} opacity={0.35} scale={8} blur={2.7} far={4} />
+    <group ref={group}>
+      <mesh ref={outerRing} rotation={[Math.PI / 2.1, 0.15, 0]}>
+        <torusGeometry args={[2.05, 0.012, 18, 220]} />
+        <meshBasicMaterial color="#0D9E8F" transparent opacity={0.58} />
+      </mesh>
+
+      <mesh ref={innerRing} rotation={[Math.PI / 2.35, -0.4, 0.25]}>
+        <torusGeometry args={[1.45, 0.018, 18, 220]} />
+        <meshBasicMaterial color="#C8892A" transparent opacity={0.5} />
+      </mesh>
+
+      <Float speed={1.7} rotationIntensity={0.7} floatIntensity={0.5}>
+        <mesh ref={core} position={[0.05, 0.05, 0.25]}>
+          <torusKnotGeometry args={[0.48, 0.12, 160, 22]} />
+          <meshPhysicalMaterial
+            color="#0D9E8F"
+            metalness={0.18}
+            roughness={0.12}
+            transmission={0.25}
+            thickness={0.5}
+            clearcoat={1}
+            clearcoatRoughness={0.08}
+          />
+        </mesh>
+      </Float>
+
+      <Float speed={2.1} rotationIntensity={1.2} floatIntensity={0.55}>
+        <mesh position={[-1.65, -0.72, 0.35]}>
+          <icosahedronGeometry args={[0.36, 1]} />
+          <meshStandardMaterial color="#C8892A" wireframe />
+        </mesh>
+      </Float>
+
+      <Float speed={1.35} rotationIntensity={0.8} floatIntensity={0.45}>
+        <mesh position={[1.56, 0.78, 0.25]}>
+          <octahedronGeometry args={[0.34, 0]} />
+          <meshStandardMaterial color="#FFFFFF" emissive="#0D9E8F" emissiveIntensity={0.22} />
+        </mesh>
+      </Float>
+
+      <Sparkles count={70} scale={[4.8, 3.6, 2]} size={2.6} speed={0.35} color="#0D9E8F" />
     </group>
   )
 }
 
-/** Main transparent R3F hero canvas. */
 function HeroSceneComponent() {
+  const setMouse = useStore(state => state.setMouse)
+
   return (
-    <div className="relative h-[420px] w-full overflow-hidden rounded-[2rem] border border-white/50 bg-white/20 shadow-soft backdrop-blur md:h-[560px]">
-      <Canvas shadows dpr={[1, 2]} frameloop="always" camera={{ position: [0, 0, 5], fov: 42 }} gl={{ alpha: true, antialias: true }}>
-        <ambientLight intensity={0.65} />
-        <directionalLight position={[4, 6, 6]} intensity={2.1} />
+    <div className="absolute inset-0">
+      <Canvas
+        dpr={[1, 2]}
+        camera={{ position: [0, 0, 5.4], fov: 42 }}
+        gl={{ alpha: true, antialias: true }}
+        onPointerMove={event => setMouse(event.clientX, event.clientY)}
+      >
+        <ambientLight intensity={0.9} />
+        <directionalLight position={[4, 5, 4]} intensity={1.9} />
+        <pointLight position={[-3, 2, 3]} intensity={2.4} color="#0D9E8F" />
+        <pointLight position={[3, -2, 3]} intensity={1.4} color="#C8892A" />
+
+        <OrbitingGrowthSystem />
+
         <Environment preset="city" />
-        <CameraScrollRig />
-        <SceneContent />
-        <AdaptiveDpr pixelated />
-        <AdaptiveEvents />
-        <PerformanceMonitor />
+
         <EffectComposer>
-          <Bloom luminanceThreshold={0.3} intensity={0.8} mipmapBlur />
-          <DepthOfField focusDistance={0.03} focalLength={0.035} bokehScale={1.5} />
-          <Noise opacity={0.025} blendFunction={BlendFunction.SOFT_LIGHT} />
-          <Vignette offset={0.12} darkness={0.75} />
+          <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.85} intensity={0.9} />
+          <Vignette offset={0.2} darkness={0.7} />
         </EffectComposer>
-        <Html position={[0, 0, 0]} center className="pointer-events-none select-none">
-          <div className="h-24 w-24 rounded-full bg-teal-2/10 blur-3xl" />
-        </Html>
       </Canvas>
     </div>
   )
 }
 
 export const HeroScene = memo(HeroSceneComponent)
+EOF

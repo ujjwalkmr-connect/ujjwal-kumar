@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0C1117"/>
+  <circle cx="256" cy="188" r="82" fill="#0D9E8F" opacity="0.95"/>
+  <path d="M112 438c24-92 84-138 144-138s120 46 144 138" fill="#C8892A"/>
+  <text x="256" y="476" text-anchor="middle" font-family="Arial" font-size="34" font-weight="700" fill="#F2F5F8">UK</text>
+</svg>

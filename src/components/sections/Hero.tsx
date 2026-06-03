@@ -35,7 +35,7 @@ function HeroComponent() {
             <a href="#experience" className="rounded-full border border-ink/15 bg-white px-6 py-3 font-semibold text-ink transition hover:border-teal-2 hover:text-teal-2">View work ↓</a>
           </motion.div>
           <motion.div variants={fadeUp} className="mt-10 flex items-center gap-4 rounded-3xl border border-white bg-white/70 p-4 shadow-soft backdrop-blur">
-            <img src="./ujjwal-photo.jpg" onError={event => { event.currentTarget.src = './photo-placeholder.svg' }} alt="Ujjwal Kumar" className="h-20 w-20 rounded-2xl object-cover" />
+            <img src="/ujjwal-kumar/ujjwal_photo.png" onError={event => { event.currentTarget.src = './photo-placeholder.svg' }} alt="Ujjwal Kumar" className="h-20 w-20 rounded-2xl object-cover" />
             <div>
               <p className="font-heading text-xl font-bold text-ink">Tech-savvy growth operator</p>
               <p className="mt-1 text-sm text-mist">Performance marketing · RevOps · Automation · AI workflows</p>
